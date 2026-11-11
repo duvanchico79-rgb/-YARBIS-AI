@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -5,37 +6,64 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07111f">
   <meta name="description" content="YARBIS AI, tu asistente personal.">
+
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="stylesheet" href="./styles.css">
+
   <title>YARBIS AI</title>
 </head>
+
 <body>
   <main class="shell">
+
     <header class="top">
-      <div class="brand"><div class="logo">Y</div><div><h1>YARBIS <span>AI</span></h1><small>ASISTENTE PERSONAL</small></div></div>
+      <div class="brand">
+        <div class="logo">Y</div>
+        <div>
+          <h1>YARBIS <span>AI</span></h1>
+          <small>ASISTENTE PERSONAL</small>
+        </div>
+      </div>
       <div class="status"><i></i> PROTOTIPO</div>
     </header>
+
     <section class="hero">
-      <div class="orb"><div class="orb-core">Y</div></div>
+      <div class="orb">
+        <div class="orb-core">Y</div>
+      </div>
       <p class="eyebrow">SISTEMA EN LÍNEA LOCAL</p>
       <h2>Hola, Duvan.</h2>
       <p class="sub">Estoy listo para ayudarte a construir tus ideas.</p>
     </section>
+
     <section class="chat" aria-label="Conversación">
       <div id="messages" class="messages" aria-live="polite">
-        <div class="msg bot"><b>YARBIS</b><p>¡Hola! Soy YARBIS. Esta es nuestra primera versión de prueba. Puedes escribirme o probar el botón de voz.</p></div>
+        <div class="msg bot">
+          <b>YARBIS</b>
+          <p>¡Hola! Soy YARBIS. Estoy listo para comenzar nuestra nueva etapa.</p>
+        </div>
       </div>
+
       <div class="composer">
         <button id="mic" class="round" aria-label="Hablar" title="Hablar">🎙</button>
         <input id="entry" type="text" placeholder="Escribe un mensaje..." autocomplete="off">
         <button id="send" class="send" aria-label="Enviar">➤</button>
       </div>
-      <p id="notice" class="notice">La conversación de esta versión es una demostración; aún no está conectada a un servicio de IA.</p>
+
+      <p id="notice" class="notice">
+        YARBIS 1.0: interfaz preparada. Conexión de IA pendiente.
+      </p>
     </section>
-    <footer><span>YARBIS AI · VERSIÓN 0.1</span><button id="install" hidden>Instalar aplicación</button></footer>
+
+    <footer>
+      <span>YARBIS AI · VERSIÓN 1.0</span>
+      <button id="install" hidden>Instalar aplicación</button>
+    </footer>
+
   </main>
+
   <script src="./app.js"></script>
 </body>
 </html>
