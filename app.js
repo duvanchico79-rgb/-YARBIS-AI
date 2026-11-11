@@ -1,8 +1,164 @@
-const messages=document.querySelector('#messages'), entry=document.querySelector('#entry'), notice=document.querySelector('#notice');
-function add(text,who){const d=document.createElement('div');d.className='msg '+who;const b=document.createElement('b');b.textContent=who==='bot'?'YARBIS':'TÚ';const p=document.createElement('p');p.textContent=text;d.append(b,p);messages.append(d);messages.scrollTop=messages.scrollHeight}
-function reply(text){const t=text.toLowerCase();let answer='Te escucho. Esta versión es un prototipo; pronto conectaremos YARBIS a un servicio de inteligencia artificial.';if(t.includes('hola'))answer='¡Hola, Duvan! Me alegra continuar el proyecto YARBIS contigo.';else if(t.includes('quién')||t.includes('quien'))answer='Soy YARBIS, tu asistente en desarrollo. Esta versión todavía funciona como demostración.';else if(t.includes('proyecto'))answer='Nuestro siguiente objetivo es publicar esta aplicación e instalarla en tu Redmi Note 11.';add(answer,'bot');if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(answer);u.lang='es-CO';speechSynthesis.speak(u)}}
-function send(){const v=entry.value.trim();if(!v)return;add(v,'user');entry.value='';setTimeout(()=>reply(v),350)}
-document.querySelector('#send').addEventListener('click',send);entry.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
-document.querySelector('#mic').addEventListener('click',()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notice.textContent='Tu navegador no ofrece reconocimiento de voz. Puedes escribir y usar la lectura de respuestas.';return}const r=new SR();r.lang='es-CO';r.onresult=e=>{entry.value=e.results[0][0].transcript;send()};r.onerror=()=>notice.textContent='No se pudo activar el micrófono. Revisa el permiso del navegador.';r.start()});
-let installPrompt;const installBtn=document.querySelector('#install');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;installBtn.hidden=false});installBtn.addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installBtn.hidden=true});
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+
+const messages = document.querySelector("#messages");
+const entry = document.querySelector("#entry");
+const notice = document.querySelector("#notice");
+const sendBtn = document.querySelector("#send");
+
+let conversation = [];
+let busy = false;
+
+function add(text, who = "bot") {
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+
+  const name = document.createElement("b");
+  name.textContent = who === "bot" ? "YARBIS :" : "TÚ :";
+
+  const p = document.createElement("p");
+  p.textContent = text;
+
+  div.append(name, p);
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function reply(message) {
+  try {
+    busy = true;
+    sendBtn.disabled = true;
+    notice.textContent = "YARBIS está pensando...";
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: message,
+        history: conversation
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Error del servidor: " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (!data.reply) {
+      throw new Error("El servidor no devolvió una respuesta.");
+    }
+
+    conversation.push(
+      { role: "user", content: message },
+      { role: "assistant", content: data.reply }
+    );
+
+    if (conversation.length > 30) {
+      conversation = conversation.slice(-30);
+    }
+
+    add(data.reply, "bot");
+
+    if ("speechSynthesis" in window) {
+      const speech = new SpeechSynthesisUtterance(data.reply);
+      speech.lang = "es-CO";
+      speechSynthesis.speak(speech);
+    }
+
+    notice.textContent = "YARBIS conectado.";
+
+  } catch (error) {
+    console.error(error);
+    notice.textContent =
+      "No se pudo conectar con el cerebro de YARBIS. Revisa el servidor.";
+  } finally {
+    busy = false;
+    sendBtn.disabled = false;
+    entry.focus();
+  }
+}
+
+function send() {
+  const message = entry.value.trim();
+
+  if (!message || busy) return;
+
+  add(message, "user");
+  entry.value = "";
+
+  reply(message);
+}
+
+sendBtn.addEventListener("click", send);
+
+entry.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    send();
+  }
+});
+
+// Reconocimiento de voz
+document.querySelector("#mic").addEventListener("click", () => {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    notice.textContent =
+      "Tu navegador no admite reconocimiento de voz.";
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "es-CO";
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    notice.textContent = "Escuchando...";
+  };
+
+  recognition.onresult = event => {
+    entry.value = event.results[0][0].transcript;
+    send();
+  };
+
+  recognition.onerror = () => {
+    notice.textContent = "Error al utilizar el micrófono.";
+  };
+
+  recognition.start();
+});
+
+// Instalación en Android
+let installPrompt;
+
+const installBtn = document.querySelector("#install");
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  installPrompt = event;
+  installBtn.hidden = false;
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!installPrompt) return;
+
+  await installPrompt.prompt();
+  await installPrompt.userChoice;
+
+  installPrompt = null;
+  installBtn.hidden = true;
+});
+
+// Service Worker
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .catch(error => console.error(
+        "Error del Service Worker:", error
+      ));
+  });
+}
+
+add("Hola, soy YARBIS AI 2.0. Estoy preparado para conectarme a mi cerebro de inteligencia artificial.");
