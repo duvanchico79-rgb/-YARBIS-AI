@@ -28,7 +28,7 @@ async function reply(message) {
     sendBtn.disabled = true;
     notice.textContent = "YARBIS está pensando...";
 
-    const response = await fetch("/api/chat", {
+    const response = await fetch("https://damp-feather-b214.duvanchico-79.workers.dev/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
